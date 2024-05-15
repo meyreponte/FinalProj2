@@ -6,7 +6,10 @@ from PIL import Image, ImageOps
 import numpy as np
 
 # Load the trained model
-model = tf.keras.models.load_model('yoga_pose_model.h5')
+@st.cache(allow_output_mutation=True)
+def load_model():
+    model = tf.keras.models.load_model('yoga_pose_model.h5')
+    return model
 
 # Define the class names
 class_names = ['Downdog', 'Goddess', 'Plank', 'Tree', 'Warrior2']
