@@ -1,22 +1,41 @@
 import streamlit as st
+import tensorflow as tf
+from PIL import Image, ImageOps
+import numpy as np
 
-# Title of the app
-st.title('My First Streamlit App')
+# Load the trained model
+@st.cache(allow_output_mutation=True)
+def load_model():
+    model = tf.keras.models.load_model('best_model65.77.keras')
+    return model
 
-# A simple text output
-st.write('Hello, Streamlit!')
+# Define the class names
+class_names = ['Cardboard', 'Food Organics', 'Glass', 'Metal', 'Miscellaneous Trash', 'Paper', 'Plastic', 'Textile Trash', 'Vegetation']
 
-# Taking input from the user
-user_input = st.text_input("Enter your name", '')
+# Streamlit app
+st.title("Waste Classification")
+st.write("Upload an image to classify the type of waste.")
 
-# Displaying input back to the user
-if user_input:
-    st.write(f'Hello {user_input}!')
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-# Button to click
-if st.button('Say Hello'):
-    st.write('Hello there!')
+def import_and_predict(image_data, model):
+    size = (150, 150)
+    image = ImageOps.fit(image_data, size, Image.ANTIALIAS)
+    img = np.asarray(image)
+    img = np.expand_dims(img, axis=0)
+    img = img / 255.0
+    prediction = model.predict(img)
+    return prediction
 
-# A simple slider
-age = st.slider('How old are you?', 0, 130, 25)
-st.write("I'm ", age, 'years old')
+if uploaded_file is not None:
+    image = Image.open(uploaded_file)
+    st.image(image, caption='Uploaded Image', use_column_width=True)
+    st.write("")
+    st.write("Classifying...")
+
+    prediction = import_and_predict(image, model)
+    predicted_class = class_names[np.argmax(prediction)]
+    confidence = np.max(prediction)
+
+    st.write(f"Prediction: {predicted_class}")
+    st.write(f"Confidence: {confidence:.2f}")
